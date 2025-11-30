@@ -16,6 +16,13 @@ function Inventory.new(userId: number)
   self.Tools = {}
   self.Suit = {}
   self.Pets = {}
+  self.HotBarSlots = {
+    [1] = nil,
+    [2] = nil,
+    [3] = nil,
+    [4] = nil,
+    [5] = nil
+  }
   self.Money = 0
 
   return self :: Interfaces.Inventory
@@ -38,10 +45,9 @@ function Inventory.fromData(data)
     table.insert(self.Tools, toolInstance)
   end
 
+  self.HotBarSlots = data.HotBarSlots
   self.Pets = data.Pets -- TODO: Same as below
-
   self.Suit = data.Suit
-
   self.Money = data.Money or 0
 
   return self :: Interfaces.Inventory
@@ -129,10 +135,9 @@ function Inventory:ToData(): { [string]: any }
   end
   data.Tools = tools
 
+  data.HotBarSlots = self.HotBarSlots
   data.Pets = self.Pets -- TODO: Change this once Pet classes have been made
-
   data.Suit = self.Suit
-
   data.Money = self.Money or 0
 
   return data

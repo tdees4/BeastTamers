@@ -43,6 +43,8 @@ export type Inventory = {
   Tools: { BaseToolInterface },
   Resources: { [string] : number },
   Consumables: { [BaseConsumableInterface] : number },
+  Pets: { string },
+  HotBarSlots: { BaseToolInterface },
   Suit: SuitInterface
 }
 
