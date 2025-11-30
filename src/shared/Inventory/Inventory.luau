@@ -25,6 +25,8 @@ function Inventory.new(userId: number)
   }
   self.Money = 0
 
+  self.MasterIndex = {}
+
   return self :: Interfaces.Inventory
 end
 
@@ -35,20 +37,21 @@ function Inventory.fromData(data)
     self.Resources[resource] = quantity
   end
 
-  for _, consumable in pairs(data.Consumables) do
+  for ID, consumable in pairs(data.Consumables) do
     local consumableInstance = BaseItem.fromData(consumable) -- TODO: Change from BaseItem to BaseConsumable
-    table.insert(self.Consumables, consumableInstance)
+    self.Consumables[ID] = consumableInstance
   end
 
-  for _, tool in pairs(data.Tools) do
+  for ID, tool in pairs(data.Tools) do
     local toolInstance = BaseTool.fromData(tool)
-    table.insert(self.Tools, toolInstance)
+    self.Tools[ID] = toolInstance
   end
 
   self.HotBarSlots = data.HotBarSlots
   self.Pets = data.Pets -- TODO: Same as below
   self.Suit = data.Suit
-  self.Money = data.Money or 0
+  self.Money = data.Money
+  self.MasterIndex = data.MasterIndex
 
   return self :: Interfaces.Inventory
 end
@@ -79,6 +82,26 @@ function Inventory:EarnMoney(amount: number)
   self.Money += amount
 
   -- Call any remote events for UI/responsiveness purposess
+end
+
+function Inventory:AddTool(tool: Interfaces.BaseToolInterface): boolean
+  if self.MasterIndex[tool.ID] or self.Tools[tool.ID] then
+    return false
+  end
+
+  self.Tools[tool.ID] = tool
+  self.MasterIndex[tool.ID] = tool
+  return true
+end
+
+function Inventory:RemoveTool(tool: Interfaces.BaseToolInterface): boolean
+  if not self.MasterIndex[tool.ID] or not self.Tools[tool.ID] then
+    return false
+  end
+
+  self.Tools[tool.ID] = nil
+  self.MasterIndex[tool.ID] = nil
+  return true
 end
 
 function Inventory:AddResource(resourceName: string, amount: number)
@@ -124,21 +147,22 @@ function Inventory:ToData(): { [string]: any }
   data.Resources = resourceData
 
   local consumables = {}
-  for _, consumable in pairs(self.Consumables) do
-    table.insert(consumables, consumable:ToData())
+  for ID, consumable in pairs(self.Consumables) do
+    consumables[ID] = consumable
   end
   data.Consumables = consumables
 
   local tools = {}
-  for _, tool in pairs(self.Tools) do
-    table.insert(tools, tool:ToData())
+  for ID, tool in pairs(self.Tools) do
+    tools[ID] = tool
   end
   data.Tools = tools
 
   data.HotBarSlots = self.HotBarSlots
   data.Pets = self.Pets -- TODO: Change this once Pet classes have been made
   data.Suit = self.Suit
-  data.Money = self.Money or 0
+  data.Money = self.Money
+  data.MasterIndex = self.MasterIndex
 
   return data
 end

@@ -40,11 +40,12 @@ export type SuitInterface = {
 
 export type Inventory = {
   UserId: number,
-  Tools: { BaseToolInterface },
-  Resources: { [string] : number },
-  Consumables: { [BaseConsumableInterface] : number },
-  Pets: { string },
+  Tools: { [string] : BaseToolInterface }, -- ID : Tool Instance
+  Resources: { [string] : number }, -- resource name : quantity
+  Consumables: { [string] : BaseConsumableInterface }, -- ID : Consumable instance
+  Pets: { [string] : string }, -- ID : Pet instance
   HotBarSlots: { BaseToolInterface },
+  MasterIndex: { [number] : BaseItemInterface }, -- ID : Item instance
   Suit: SuitInterface
 }
 
