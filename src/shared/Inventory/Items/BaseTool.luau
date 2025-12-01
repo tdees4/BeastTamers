@@ -8,7 +8,7 @@ local Interfaces = require(ReplicatedStorage.Shared.Inventory.Interfaces)
 local BaseTool = setmetatable({}, BaseItem)
 BaseTool.__index = BaseTool
 
-function BaseTool.new(name: string, tier: number)
+function BaseTool.new(name: string, tier: number): Interfaces.BaseToolInterface
   local self = BaseItem.new(name, ItemTypes.Tool)
   setmetatable(self, BaseTool)
 
@@ -26,7 +26,7 @@ function BaseTool.new(name: string, tier: number)
   return self :: Interfaces.BaseToolInterface
 end
 
-function BaseTool.fromData(data)
+function BaseTool.fromData(data): Interfaces.BaseToolInterface
   local self = BaseItem.fromData(data)
   setmetatable(self, BaseTool)
 

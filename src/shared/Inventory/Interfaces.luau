@@ -27,7 +27,12 @@ export type TamingNet = BaseToolInterface & {
 }
 
 export type BaseConsumableInterface = BaseItemInterface & {
-  Consume: (self: BaseConsumableInterface) -> boolean
+  Stack: number,
+  MaxStack: number,
+
+  Consume: (self: BaseConsumableInterface) -> boolean,
+  AddStack: (self: BaseConsumableInterface, amount: number) -> nil,
+  RemoveStack: (self: BaseConsumableInterface, amount: number) -> boolean
 }
 
 export type SuitInterface = {

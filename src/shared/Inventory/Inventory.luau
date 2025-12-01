@@ -2,7 +2,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Interfaces = require(ReplicatedStorage.Shared.Inventory.Interfaces)
 local BaseItem = require(ReplicatedStorage.Shared.Inventory.Items.BaseItem)
+local BaseConsumable = require(ReplicatedStorage.Shared.Inventory.Items.BaseConsumable)
 local BaseTool = require(ReplicatedStorage.Shared.Inventory.Items.BaseTool)
+local ItemDefinitions = require(ReplicatedStorage.Shared.Inventory.Items.ItemDefinitions)
 
 local Inventory = {}
 Inventory.__index = Inventory
@@ -60,6 +62,8 @@ end
 -- Inventory Methods
 -- =================
 
+-- SETTER METHODS --
+
 --[[
 Takes the desired amount of money from the player's inventory
 
@@ -104,16 +108,35 @@ function Inventory:RemoveTool(tool: Interfaces.BaseToolInterface): boolean
   return true
 end
 
-function Inventory:AddResource(resourceName: string, amount: number)
-  if self.Resources[resourceName] then
-    local current = self.Resources[resourceName]
-    self.Resources[resourceName] = current + amount
-  else
-    self.Resources[resourceName] = amount
+function Inventory:AddResource(resourceName: string, amount: number): boolean
+  if amount <= 0 then
+    warn("Attempted to add non-positive amount of resource: "..resourceName)
+    return false
   end
+
+  if not ItemDefinitions.Resource[resourceName] then
+    warn("Attempted to remove invalid resource: "..resourceName)
+    return false
+  end
+
+  local current = self.Resources[resourceName] or 0
+  local final = math.min(current + amount, ItemDefinitions.Resource[resourceName].MaxStack)
+
+  if current + amount > ItemDefinitions.Resource[resourceName].MaxStack then
+    warn("Player "..self.UserId.." attempted to add more "..resourceName.." than max stack size.")
+  end
+
+  self.Resources[resourceName] = final
+
+  return true
 end
 
 function Inventory:RemoveResource(resourceName: string, amount: number): boolean
+  if amount <= 0 then
+    warn("Attempted to remove non-positive amount of resource: "..resourceName)
+    return false
+  end
+
   if not self.Resources[resourceName] or self.Resources[resourceName] < amount then
     warn("Player "..self.UserId.." does not have enough "..resourceName)
     return false
@@ -125,15 +148,69 @@ function Inventory:RemoveResource(resourceName: string, amount: number): boolean
 end
 
 function Inventory:AddConsumable(consumableName: string, amount: number)
+  if amount <= 0 then
+    warn("Attempted to add non-positive amount of consumable: "..consumableName)
+    return
+  end
+
   local existing = self.Consumables[consumableName]
 
   if existing then
-    existing:AddQuantity(amount)
+    existing:AddStack(amount)
   else
-    local newInstance -- Use Consumable constructor here
-    -- TODO: Complete logic
+    local consumable = BaseConsumable.new(consumableName, 0)
+    consumable:AddStack(amount - 1) -- x - 1 because new consumable starts at 1 stack
   end
 end
+
+function Inventory:RemoveConsumable(consumableName: string, amount: number): boolean
+  if amount <= 0 then
+    warn("Attempted to add non-positive amount of consumable: "..consumableName)
+    return false
+  end
+
+  local existing = self.Consumables[consumableName]
+
+  if not existing then
+    warn("Player "..self.UserId.." does not have any "..consumableName)
+    return false
+  end
+
+  return existing:RemoveStack(amount)
+end
+
+-- HAS METHODS --
+
+function Inventory:HasResource(resourceName: string, amount: number): boolean
+  local current = self.Resources[resourceName] or 0
+  return current >= amount
+end
+
+function Inventory:HasConsumable(consumableName: string, amount: number): boolean
+  local existing = self.Consumables[consumableName]
+
+  if not existing then
+    return false
+  end
+
+  return existing.Stack >= amount
+end
+
+function Inventory:HasTool(toolName: string): boolean
+  for _, tool in pairs(self.Tools) do
+    if tool.Name == toolName then
+      return true
+    end
+  end
+
+  return false
+end
+
+function Inventory:HasToolID(toolID: string): boolean
+  return self.Tools[toolID] ~= nil
+end
+
+-- DATA METHODS --
 
 function Inventory:ToData(): { [string]: any }
   local data = {}

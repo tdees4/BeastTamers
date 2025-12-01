@@ -11,7 +11,7 @@ BaseItem.__index = BaseItem
 local ItemDefinitions = {}
 
 -- Base constructor (Should only be called by subclasses) --
-function BaseItem.new(name: string, type: ItemTypes.Type)
+function BaseItem.new(name: string, type: ItemTypes.Type): Interfaces.BaseItemInterface
   local self = setmetatable({}, BaseItem)
 
   self.ID = HttpService:GenerateGUID(false)
@@ -30,10 +30,11 @@ function BaseItem.new(name: string, type: ItemTypes.Type)
 end
 
 -- Constructor for loading data from data stores --
-function BaseItem.fromData(data: { ID: string, name: string, type: ItemTypes.Type })
-  local self = BaseItem.new(data.name, data.type)
+function BaseItem.fromData(data: { ID: string, Name: string, Type: ItemTypes.Type, Tier: number }): Interfaces.BaseItemInterface
+  local self = BaseItem.new(data.Name, data.Type)
 
   self.ID = data.ID
+  self.Tier = data.Tier or 0
 
   return self :: Interfaces.BaseItemInterface
 end
